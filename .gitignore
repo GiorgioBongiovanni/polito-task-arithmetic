@@ -1,4 +1,13 @@
-env/
+venv/
 checkpoints/*
 data/*
+task_arithmetic_datasets/
 __pycache__/
+
+# Ignore all .pt files
+*.pt
+
+# Ignore all .pth files
+*.pth
+
+*.json

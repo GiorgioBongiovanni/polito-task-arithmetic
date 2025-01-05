@@ -8,14 +8,6 @@ source venv/Scripts/activate
 # Imposta il PYTHONPATH per includere la directory radice
 export PYTHONPATH=$(pwd)
 
-# Esegui il fine-tuning
-python launch_scripts/finetune.py \
-    --data-location="C:\Users\bongi\Documents\Advanced machine learning\polito-task-arithmetic\task_arithmetic_datasets" \
-    --save="C:\Users\bongi\Documents\Advanced machine learning\polito-task-arithmetic\results" \
-    --batch-size=32 \
-    --lr=1e-4 \
-    --wd=0.0
-
 # Esegui la valutazione su un singolo task
 python launch_scripts/eval_single_task.py \
     --data-location="C:\Users\bongi\Documents\Advanced machine learning\polito-task-arithmetic\task_arithmetic_datasets" \
