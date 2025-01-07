@@ -144,9 +144,6 @@ def main():
     if not os.path.exists(base_encoder_path):
         raise FileNotFoundError(f"Encoder pre-addestrato non trovato: {base_encoder_path}")
 
-    # Caricamento del modello pre-addestrato
-    base_encoder = torch_load(base_encoder_path, device="cpu")
-
     # Costruzione dei task vector per ogni dataset
     task_vectors = []
     for dataset_name in datasets:
@@ -159,6 +156,7 @@ def main():
     # Ricerca del miglior alpha usando il validation set
     alpha_values = [round(x * 0.05, 2) for x in range(21)]
     best_alpha = evaluate_alpha(base_encoder_path, task_vectors, datasets, args, alpha_values)
+    # best_alpha = 0.3
 
     # Calcolo delle accuratezze finali usando alpha ottimale
     merged_task_vector = sum(task_vectors)
@@ -170,7 +168,7 @@ def main():
     avg_normalized_test_accuracy = 0.0
 
     for dataset_name, task_vector in zip(datasets, task_vectors):
-        dataset_results = evaluate_model(merged_encoder, base_encoder_path, task_vector, dataset_name, args, best_alpha)
+        dataset_results = evaluate_model(merged_encoder, dataset_name, args, task_vector, base_encoder_path, best_alpha)
         results[dataset_name] = dataset_results
 
         # Stampa accuracies per ogni dataset
@@ -213,5 +211,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
