@@ -11,3 +11,7 @@ __pycache__/
 *.pth
 
 *.json
+
+# Ignore files downloaded from gdrive
+gdrive/**
+!gdrive/**/README.md
