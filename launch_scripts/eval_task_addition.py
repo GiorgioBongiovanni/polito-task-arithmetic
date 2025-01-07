@@ -7,12 +7,15 @@ from args import parse_arguments
 from utils import torch_load, get_dataloader
 from datasets.registry import get_dataset
 from heads import get_classification_head
+from typing import Literal
+from modeling import ImageClassifier
 
-# Configurazione specifica per ogni dataset
+# dataset specific configuration
 datasets = ["DTD", "EuroSAT", "GTSRB", "MNIST", "RESISC45", "SVHN"]
 
 
-def compute_accuracy(loader, model, device):
+def compute_accuracy(loader: torch.utils.data.DataLoader, model: ImageClassifier, device: Literal['cpu', 'gpu']):
+    """Returns correctly labeled entries over the total of tested entries"""
     correct = 0
     total = 0
     with torch.no_grad():
@@ -81,8 +84,8 @@ def evaluate_alpha(base_encoder_path, task_vectors, datasets, args, alpha_values
     best_avg_normalized_accuracy = 0.0
 
     # Iterazione su tutti i valori di alpha
+    merged_task_vector = sum(task_vectors)  # Somma dei task vector
     for alpha in alpha_values:
-        merged_task_vector = sum(task_vectors)  # Somma dei task vector
         merged_encoder = merged_task_vector.apply_to(base_encoder_path, scaling_coef=alpha)  # Applicazione del task vector scalato
 
         avg_normalized_accuracy = 0.0
