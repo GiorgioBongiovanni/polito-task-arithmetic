@@ -1,6 +1,9 @@
 venv/
 checkpoints/*
 data/*
+!data/**/README.md
+variables.sh
+
 task_arithmetic_datasets/
 __pycache__/
 
@@ -11,7 +14,3 @@ __pycache__/
 *.pth
 
 *.json
-
-# Ignore files downloaded from gdrive
-gdrive/**
-!gdrive/**/README.md
