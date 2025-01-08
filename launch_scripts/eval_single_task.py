@@ -1,7 +1,7 @@
 import os
 import json
 import torch
-from utils import torch_load, get_dataloader
+from utils import torch_load, get_dataloader, compute_accuracy
 from args import parse_arguments
 from datasets.registry import get_dataset
 from modeling import ImageClassifier, ImageEncoder
@@ -27,7 +27,7 @@ def evaluate_model(encoder_path, dataset_name, args):
     model.to(args.device)
     model.eval()
 
-    # Preparazione dei dataset di training e test
+    # Preparazione dei dataset di training, test e validation
     train_dataset = get_dataset(
         f"{dataset_name}Val",
         preprocess=model.train_preprocess,
@@ -42,29 +42,30 @@ def evaluate_model(encoder_path, dataset_name, args):
         batch_size=args.batch_size,
         num_workers=4
     )
+    val_dataset = get_dataset(
+        f"{dataset_name}Val",
+        preprocess=model.val_preprocess,
+        location=args.data_location,
+        batch_size=args.batch_size,
+        num_workers=4
+    )
 
     train_loader = get_dataloader(train_dataset, is_train=True, args=args)
     test_loader = get_dataloader(test_dataset, is_train=False, args=args)
-
-    # Funzione per calcolare l'accuratezza
-    def compute_accuracy(loader):
-        correct = 0
-        total = 0
-        with torch.no_grad():
-            for batch in loader:
-                inputs, targets = batch[0].to(args.device), batch[1].to(args.device)
-                outputs = model(inputs)
-                _, predicted = torch.max(outputs, 1)
-                correct += (predicted == targets).sum().item()
-                total += targets.size(0)
-        return correct / total
+    val_loader = get_dataloader(val_dataset, is_train=False, args=args)
 
     # Calcolo dell'accuratezza
-    train_accuracy = compute_accuracy(train_loader)
-    test_accuracy = compute_accuracy(test_loader)
+    train_accuracy = compute_accuracy(train_loader, model, args.device)
+    test_accuracy = compute_accuracy(test_loader, model, args.device)
+    val_accuracy = compute_accuracy(val_loader, model, args.device)
 
-    print(f"Dataset: {dataset_name}, Training Accuracy: {train_accuracy:.4f}, Test Accuracy: {test_accuracy:.4f}")
-    return train_accuracy, test_accuracy
+    print(
+        f"Dataset: {dataset_name}, "
+        f"Training Accuracy: {train_accuracy:.4f}, "
+        f"Validation Accuracy: {val_accuracy:.4f}, "
+        f"Test Accuracy: {test_accuracy:.4f}"
+    )
+    return train_accuracy, val_accuracy, test_accuracy
 
 def main():
     args = parse_arguments()
@@ -76,9 +77,10 @@ def main():
             print(f"Encoder non trovato per il dataset {dataset_name}: {encoder_path}")
             continue
 
-        train_accuracy, test_accuracy = evaluate_model(encoder_path, dataset_name, args)
+        train_accuracy, val_accuracy, test_accuracy = evaluate_model(encoder_path, dataset_name, args)
         results[dataset_name] = {
             "training_accuracy": train_accuracy,
+            "validation_accuracy": val_accuracy,
             "test_accuracy": test_accuracy
         }
 
@@ -91,3 +93,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -2,7 +2,7 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from utils import torch_save, get_dataloader
+from utils import torch_save, get_dataloader, compute_accuracy
 from args import parse_arguments
 from datasets.registry import get_dataset
 from modeling import ImageClassifier, ImageEncoder
@@ -115,19 +115,6 @@ def main():
     print("\n--- Average Pre-trained Model Accuracy ---")
     print(f"Avg Training Accuracy: {avg_train_accuracy:.4f}")
     print(f"Avg Test Accuracy: {avg_test_accuracy:.4f}")
-
-
-def compute_accuracy(loader, model, device):
-    correct = 0
-    total = 0
-    with torch.no_grad():
-        for batch in loader:
-            inputs, targets = batch[0].to(device), batch[1].to(device)
-            outputs = model(inputs)
-            _, predicted = torch.max(outputs, 1)
-            correct += (predicted == targets).sum().item()
-            total += targets.size(0)
-    return correct / total
 
 
 if __name__ == "__main__":

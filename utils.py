@@ -20,6 +20,19 @@ def torch_load(save_path, device=None):
         model = model.to(device)
     return model
 
+def compute_accuracy(loader, model, device):
+    """Returns correctly labeled entries over the total of tested entries"""
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for batch in loader:
+            inputs, targets = batch[0].to(device), batch[1].to(device)
+            outputs = model(inputs)
+            _, predicted = torch.max(outputs, 1)
+            correct += (predicted == targets).sum().item()
+            total += targets.size(0)
+    return correct / total
+
 
 class DotDict(dict): 
     """dot.notation access to dictionary attributes"""

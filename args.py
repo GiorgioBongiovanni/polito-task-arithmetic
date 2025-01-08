@@ -39,7 +39,7 @@ def parse_arguments():
     parser.add_argument(
         "--model",
         type=str,
-        default="ViT-B-32",
+        default="ViT-B-32-quickgelu", # ViT-B-32
         help="The type of model (e.g. RN50, ViT-B-32).",
     )
     parser.add_argument(
