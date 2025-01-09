@@ -47,16 +47,17 @@ class ImageEncoder(torch.nn.Module):
         state_dict = torch.load(filename, map_location="cpu")
         return cls.load(model_name, state_dict)
 
-    @classmethod
-    def load_from_state_dict(cls, model_name, state_dict):
-        (
-            self.model,
-            self.train_preprocess,
-            self.val_preprocess,
-        ) = open_clip.create_model_and_transforms(
-            name, pretrained=pretrained, cache_dir=args.openclip_cachedir
-        )
-        self.model.load_from_state_dict(state_dict)
+    # FIXME: class method calling self doesn't work. This appears to be a factory.
+    # @classmethod
+    # def load_from_state_dict(cls, model_name, state_dict):
+    #     (
+    #         self.model,
+    #         self.train_preprocess,
+    #         self.val_preprocess,
+    #     ) = open_clip.create_model_and_transforms(
+    #         name, pretrained=pretrained, cache_dir=args.openclip_cachedir
+    #     )
+    #     self.model.load_from_state_dict(state_dict)
 
 
 class ClassificationHead(torch.nn.Linear):
