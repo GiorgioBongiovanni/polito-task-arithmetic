@@ -1,3 +1,5 @@
+from typing import Callable
+
 cars_template = [
     lambda c: f'a photo of a {c}.',
     lambda c: f'a photo of the {c}.',
@@ -201,7 +203,7 @@ svhn_template = [
 ]
 
 
-dataset_to_template = {
+dataset_to_template: dict[str, list[Callable[[object], str]]] = {
     'Cars': cars_template,
     'CIFAR10': cifar10_template,
     'CIFAR100': cifar100_template,
@@ -217,9 +219,8 @@ dataset_to_template = {
     'SVHN': svhn_template,
 }
 
-
-def get_templates(dataset_name):
+def get_templates(dataset_name: str) -> list[Callable[[object], str]]:
     if dataset_name.endswith('Val'):
-        return get_templates(dataset_name.replace('Val', ''))
+        dataset_name = dataset_name.replace('Val', '')
     assert dataset_name in dataset_to_template, f'Unsupported dataset: {dataset_name}'
     return dataset_to_template[dataset_name]
