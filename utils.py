@@ -20,6 +20,7 @@ def torch_load(save_path, device=None):
         model = model.to(device)
     return model
 
+
 def compute_accuracy(loader, model, device):
     """Returns correctly labeled entries over the total of tested entries"""
     correct = 0
@@ -32,6 +33,24 @@ def compute_accuracy(loader, model, device):
             correct += (predicted == targets).sum().item()
             total += targets.size(0)
     return correct / total
+
+
+def compute_fisher_log_trace(args, model, dataset_name, samples_nr=2000):
+    """
+    Compute the log-trace of the diagonal Fisher Information Matrix (FIM).
+
+    Args:
+        args: Command-line arguments.
+        model: The model (e.g., ImageClassifier).
+        dataset_name: The dataset name (e.g., "MNIST").
+        samples_nr: The number of samples to use for gradient accumulation.
+
+    Returns:
+        logdet_hF: The log-trace of the diagonal FIM.
+    """
+    print(f"Calculating Fisher log-trace for dataset: {dataset_name}")
+    logdet_hF = train_diag_fim_logtr(args, model, dataset_name, samples_nr)
+    return logdet_hF
 
 
 class DotDict(dict): 

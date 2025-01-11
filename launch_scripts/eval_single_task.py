@@ -1,7 +1,7 @@
 import os
 import json
 import torch
-from utils import torch_load, get_dataloader, compute_accuracy
+from utils import torch_load, get_dataloader, compute_accuracy, train_diag_fim_logtr
 from args import parse_arguments
 from datasets.registry import get_dataset
 from modeling import ImageClassifier, ImageEncoder
@@ -59,17 +59,27 @@ def evaluate_model(encoder_path, dataset_name, args):
     test_accuracy = compute_accuracy(test_loader, model, args.device)
     val_accuracy = compute_accuracy(val_loader, model, args.device)
 
+    # Calcolo della metrica sulla matrice di Fisher
+    samples_nr = 2000
+    log_trace_fisher = train_diag_fim_logtr(args, model, dataset_name, samples_nr)
+
     print(
         f"Dataset: {dataset_name}, "
         f"Training Accuracy: {train_accuracy:.4f}, "
         f"Validation Accuracy: {val_accuracy:.4f}, "
-        f"Test Accuracy: {test_accuracy:.4f}"
+        f"Test Accuracy: {test_accuracy:.4f}, "
+        f"Log-trace Fisher: {log_trace_fisher:.4f}"
     )
-    return train_accuracy, val_accuracy, test_accuracy
+
+    return train_accuracy, val_accuracy, test_accuracy, log_trace_fisher
 
 def main():
     args = parse_arguments()
     results = {}
+    total_train_accuracy = 0.0
+    total_test_accuracy = 0.0
+    total_fisher_log_trace = 0.0
+    dataset_count = len(data_config)
 
     for dataset_name in data_config.keys():
         encoder_path = os.path.join(args.save, f"{dataset_name}_encoder.pth")
@@ -77,15 +87,34 @@ def main():
             print(f"Encoder non trovato per il dataset {dataset_name}: {encoder_path}")
             continue
 
-        train_accuracy, val_accuracy, test_accuracy = evaluate_model(encoder_path, dataset_name, args)
+        train_accuracy, val_accuracy, test_accuracy, log_trace_fisher = evaluate_model(encoder_path, dataset_name, args)
         results[dataset_name] = {
             "training_accuracy": train_accuracy,
             "validation_accuracy": val_accuracy,
-            "test_accuracy": test_accuracy
+            "test_accuracy": test_accuracy,
+            "log_trace_fisher": log_trace_fisher
         }
+        total_train_accuracy += train_accuracy
+        total_test_accuracy += test_accuracy
+        total_fisher_log_trace += log_trace_fisher
+
+    avg_train_accuracy = total_train_accuracy / dataset_count
+    avg_test_accuracy = total_test_accuracy / dataset_count
+    avg_fisher_log_trace = total_fisher_log_trace / dataset_count
+
+    print(f"\n--- Average Results ---")
+    print(f"Avg Training Accuracy: {avg_train_accuracy:.4f}")
+    print(f"Avg Test Accuracy: {avg_test_accuracy:.4f}")
+    print(f"Avg Log-trace Fisher: {avg_fisher_log_trace:.4f}")
+
+    results["average"] = {
+        "training_accuracy": avg_train_accuracy,
+        "test_accuracy": avg_test_accuracy,
+        "log_trace_fisher": avg_fisher_log_trace
+    }
 
     # Salva i risultati in un file JSON
-    results_path = os.path.join(args.save, "evaluation_results.json")
+    results_path = os.path.join(args.save, f"evaluation_results_{args.experiment_name}.json")
     with open(results_path, "w") as f:
         json.dump(results, f, indent=4)
 
@@ -93,4 +122,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

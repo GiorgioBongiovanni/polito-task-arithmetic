@@ -4,33 +4,38 @@ import json
 from task_vectors import NonLinearTaskVector
 from modeling import ImageClassifier
 from args import parse_arguments
-from utils import get_dataloader, compute_accuracy
+from utils import get_dataloader, compute_accuracy, train_diag_fim_logtr
 from datasets.registry import get_dataset
 from heads import get_classification_head
 
 # Dataset specific configuration
 datasets = ["DTD", "EuroSAT", "GTSRB", "MNIST", "RESISC45", "SVHN"]
 
+def generate_experiment_name(args):
+    """Genera un nome univoco per l'esperimento basato sui parametri di configurazione."""
+    return f"batch{args.batch_size}_lr{args.lr}_wd{args.wd}"
+
+
 def evaluate_alpha(base_encoder_path, task_vectors, datasets, args, alpha_values, single_task_metrics):
     best_alpha = 0.0
     best_avg_normalized_accuracy = 0.0
+    fisher_log_traces = []
 
-    merged_task_vector = sum(task_vectors)  # Somma dei task vector
+    merged_task_vector = sum(task_vectors)  # Sum of task vectors
 
     for alpha in alpha_values:
         merged_encoder = merged_task_vector.apply_to(base_encoder_path, scaling_coef=alpha)
 
-        avg_normalized_train_accuracy = 0.0
         avg_normalized_test_accuracy = 0.0
 
         for dataset_name, task_vector in zip(datasets, task_vectors):
-            # Caricamento del modello multi-task
+            # Load multi-task model
             head = get_classification_head(args, f"{dataset_name}Val")
             model = ImageClassifier(merged_encoder, head)
             model.eval()
             model.to(args.device)
 
-            # Preparazione del validation set
+            # Prepare validation set
             val_dataset = get_dataset(
                 f"{dataset_name}Val",
                 preprocess=model.val_preprocess,
@@ -40,41 +45,41 @@ def evaluate_alpha(base_encoder_path, task_vectors, datasets, args, alpha_values
             )
             val_loader = get_dataloader(val_dataset, is_train=False, args=args)
 
-            # Accuratezza del modello multi-task sul validation set
+            # Multi-task accuracy on the validation set
             multi_task_accuracy = compute_accuracy(val_loader, model, args.device)
 
-            # Accuratezza del modello single-task dal file JSON
+            # Single-task accuracy from JSON file
             single_task_val_accuracy = single_task_metrics[dataset_name]["validation_accuracy"]
 
-            # Calcolo dell'accuratezza normalizzata
+            # Calculate normalized accuracy
             normalized_val_accuracy = multi_task_accuracy / single_task_val_accuracy
 
             avg_normalized_test_accuracy += normalized_val_accuracy
 
-        # Calcolo delle medie delle accuratezze normalizzate
+        # Compute average normalized test accuracy
         avg_normalized_test_accuracy /= len(datasets)
 
         print(f"Alpha: {alpha}, Avg Normalized Validation Accuracy: {avg_normalized_test_accuracy:.4f}")
 
-        # Aggiornamento del miglior alpha
+        # Update best alpha
         if avg_normalized_test_accuracy > best_avg_normalized_accuracy:
             best_avg_normalized_accuracy = avg_normalized_test_accuracy
             best_alpha = alpha
 
-    print(f"\nMiglior alpha: {best_alpha}, Avg Normalized Validation Accuracy: {best_avg_normalized_accuracy:.4f}")
+    print(f"\nBest alpha: {best_alpha}, Avg Normalized Validation Accuracy: {best_avg_normalized_accuracy:.4f}")
     return best_alpha
 
 
 def evaluate_model(merged_encoder, dataset_name, args, single_task_metrics):
-    print(f"Valutazione sul dataset {dataset_name}...")
+    print(f"Evaluating dataset {dataset_name}...")
 
-    # Caricamento della classification head specifica
+    # Load classification head
     head = get_classification_head(args, f"{dataset_name}Val")
     model = ImageClassifier(merged_encoder, head)
     model.eval()
     model.to(args.device)
 
-    # Preparazione dei loader per training e test
+    # Prepare loaders for training and test sets
     train_dataset = get_dataset(
         f"{dataset_name}Val",
         preprocess=model.train_preprocess,
@@ -92,23 +97,37 @@ def evaluate_model(merged_encoder, dataset_name, args, single_task_metrics):
     train_loader = get_dataloader(train_dataset, is_train=True, args=args)
     test_loader = get_dataloader(test_dataset, is_train=False, args=args)
 
-    # Calcolo delle accuratezze assolute
+    # Compute absolute accuracies
     train_accuracy = compute_accuracy(train_loader, model, args.device)
     test_accuracy = compute_accuracy(test_loader, model, args.device)
 
-    # Accuratezze single-task dal file JSON
+    # Single-task accuracies from JSON file
     train_single_task_accuracy = single_task_metrics[dataset_name]["training_accuracy"]
     test_single_task_accuracy = single_task_metrics[dataset_name]["test_accuracy"]
 
-    # Calcolo delle accuratezze normalizzate
+    # Compute normalized accuracies
     normalized_train_accuracy = train_accuracy / train_single_task_accuracy
     normalized_test_accuracy = test_accuracy / test_single_task_accuracy
+
+    # Compute Fisher metric
+    samples_nr = 2000
+    fisher_log_trace = train_diag_fim_logtr(args, model, dataset_name, samples_nr)
+
+    print(
+        f"Dataset: {dataset_name}, "
+        f"Training Accuracy: {train_accuracy:.4f}, "
+        f"Test Accuracy: {test_accuracy:.4f}, "
+        f"Normalized Training Accuracy: {normalized_train_accuracy:.4f}, "
+        f"Normalized Test Accuracy: {normalized_test_accuracy:.4f}, "
+        f"Fisher Log-trace: {fisher_log_trace:.4f}"
+    )
 
     return {
         "training_accuracy": train_accuracy,
         "test_accuracy": test_accuracy,
         "normalized_training_accuracy": normalized_train_accuracy,
-        "normalized_test_accuracy": normalized_test_accuracy
+        "normalized_test_accuracy": normalized_test_accuracy,
+        "fisher_log_trace": fisher_log_trace
     }
 
 
@@ -116,33 +135,34 @@ def main():
     args = parse_arguments()
     base_encoder_path = os.path.join(args.save, "zeroshot_encoder.pth")
 
-    # Controllo che il modello pre-addestrato esista
+    # Ensure the pre-trained model exists
     if not os.path.exists(base_encoder_path):
-        raise FileNotFoundError(f"Encoder pre-addestrato non trovato: {base_encoder_path}")
+        raise FileNotFoundError(f"Pre-trained encoder not found: {base_encoder_path}")
 
-    # Caricamento delle single-task accuracy dal file JSON
-    single_task_metrics_path = os.path.join(args.save, "evaluation_results.json")
+    # Load single-task metrics from JSON file
+    single_task_metrics_path = os.path.join(args.save, f"evaluation_results_{args.experiment_name}.json")
     with open(single_task_metrics_path, "r") as f:
         single_task_metrics = json.load(f)
 
-    # Costruzione dei task vector per ogni dataset
+    # Build task vectors for each dataset
     task_vectors = []
     for dataset_name in datasets:
         finetuned_path = os.path.join(args.save, f"{dataset_name}_encoder.pth")
         if not os.path.exists(finetuned_path):
-            raise FileNotFoundError(f"Encoder fine-tuned non trovato per {dataset_name}: {finetuned_path}")
+            raise FileNotFoundError(f"Fine-tuned encoder not found for {dataset_name}: {finetuned_path}")
         task_vector = NonLinearTaskVector(base_encoder_path, finetuned_path)
         task_vectors.append(task_vector)
 
-    # Ricerca del miglior alpha usando il validation set
+    # Search for the best alpha using the validation set
     alpha_values = [round(x * 0.05, 2) for x in range(21)]
     best_alpha = evaluate_alpha(base_encoder_path, task_vectors, datasets, args, alpha_values, single_task_metrics)
 
-    # Calcolo delle accuratezze finali usando alpha ottimale
+    # Compute final accuracies using the best alpha
     merged_task_vector = sum(task_vectors)
     merged_encoder = merged_task_vector.apply_to(base_encoder_path, scaling_coef=best_alpha)
-    results = {}
+    results = {"best_alpha": best_alpha}
 
+    total_fisher_log_trace = 0.0
     avg_train_accuracy = 0.0
     avg_test_accuracy = 0.0
     avg_normalized_train_accuracy = 0.0
@@ -156,42 +176,41 @@ def main():
         avg_test_accuracy += dataset_results["test_accuracy"]
         avg_normalized_train_accuracy += dataset_results["normalized_training_accuracy"]
         avg_normalized_test_accuracy += dataset_results["normalized_test_accuracy"]
+        total_fisher_log_trace += dataset_results["fisher_log_trace"]
 
-        # Stampa delle accuratezze per ogni dataset
-        print(f"Dataset: {dataset_name}")
-        print(f" - Training Accuracy: {dataset_results['training_accuracy']:.4f}")
-        print(f" - Test Accuracy: {dataset_results['test_accuracy']:.4f}")
-        print(f" - Normalized Training Accuracy: {dataset_results['normalized_training_accuracy']:.4f}")
-        print(f" - Normalized Test Accuracy: {dataset_results['normalized_test_accuracy']:.4f}")
-
-    # Calcolo delle medie globali
+    # Compute global averages
     avg_train_accuracy /= len(datasets)
     avg_test_accuracy /= len(datasets)
     avg_normalized_train_accuracy /= len(datasets)
     avg_normalized_test_accuracy /= len(datasets)
+    avg_fisher_log_trace = total_fisher_log_trace / len(datasets)
 
-    # Aggiunta delle medie globali ai risultati
+    # Add global averages to results
     results["average"] = {
         "absolute_training_accuracy": avg_train_accuracy,
         "absolute_test_accuracy": avg_test_accuracy,
         "normalized_training_accuracy": avg_normalized_train_accuracy,
-        "normalized_test_accuracy": avg_normalized_test_accuracy
+        "normalized_test_accuracy": avg_normalized_test_accuracy,
+        "fisher_log_trace": avg_fisher_log_trace
     }
 
-    # Stampa delle medie globali
+    # Print global averages
     print("\n--- Average Results ---")
+    print(f"Best Alpha: {best_alpha}")
     print(f"Avg Absolute Training Accuracy: {avg_train_accuracy:.4f}")
     print(f"Avg Absolute Test Accuracy: {avg_test_accuracy:.4f}")
     print(f"Avg Normalized Training Accuracy: {avg_normalized_train_accuracy:.4f}")
     print(f"Avg Normalized Test Accuracy: {avg_normalized_test_accuracy:.4f}")
+    print(f"Avg Fisher Log-trace: {avg_fisher_log_trace:.4f}")
 
-    # Salvataggio dei risultati
-    results_path = os.path.join(args.save, "task_addition_results.json")
+    # Save results to JSON file
+    results_path = os.path.join(args.save, f"task_addition_results_{args.experiment_name}.json")
     with open(results_path, "w") as f:
         json.dump(results, f, indent=4)
 
-    print(f"Risultati salvati in {results_path}")
+    print(f"Results saved to {results_path}")
 
 
 if __name__ == "__main__":
     main()
+

@@ -125,6 +125,13 @@ def parse_arguments():
         default=21,
         help="Number of evaluation points used to find optimal coefficient in task arithmetic.",
     )
+    parser.add_argument(
+    "--experiment-name",
+    type=str,
+    default=None,
+    help="Nome dell'esperimento per identificare i file di output univocamente.",
+    )
+
     parsed_args = parser.parse_args()
     parsed_args.device = "cuda" if torch.cuda.is_available() else "cpu"
 
