@@ -129,8 +129,26 @@ def parse_arguments():
     "--experiment-name",
     type=str,
     default=None,
-    help="Nome dell'esperimento per identificare i file di output univocamente.",
+    help="Name of the experiment for uniquely identifying output files.",
     )
+    parser.add_argument(
+        "--stopping-criterion",
+        choices=["epochs", "fisher", "validation"],
+        default="epochs",
+        help=(
+            "Stopping criterion for fine-tuning. Options are:\n"
+            "  - 'epochs': Stop after a fixed number of epochs.\n"
+            "  - 'fisher': Stop based on the checkpoint with maximal diagonal FIM log-trace.\n"
+            "  - 'validation': Stop based on the checkpoint with the highest validation accuracy."
+        ),
+    )
+    parser.add_argument(
+    "--balanced",
+    type=lambda x: x.lower() == 'true',
+    default=True,  # Imposta "true" come valore predefinito
+    help="Whether to use balanced training data by down-sampling over-represented classes. Default is True.",
+    )
+
 
     parsed_args = parser.parse_args()
     parsed_args.device = "cuda" if torch.cuda.is_available() else "cpu"

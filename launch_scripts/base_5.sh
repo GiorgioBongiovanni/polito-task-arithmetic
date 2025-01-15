@@ -29,54 +29,6 @@ run_evaluation() {
         --experiment-name="$EXPERIMENT_NAME"
 }
 
-# 1) Esperimenti su batch size
-for BATCH_SIZE in 8 16 64 128; do
-    LR=1e-4
-    WD=0.0
-    EXPERIMENT_NAME=$(generate_experiment_name)
-    echo "Esperimento con batch size = $BATCH_SIZE"
-    python launch_scripts/finetune.py \
-        --data-location="$DATA_LOCATION" \
-        --save="$RESULTS_LOCATION" \
-        --batch-size="$BATCH_SIZE" \
-        --lr="$LR" \
-        --wd="$WD" \
-        --experiment-name="$EXPERIMENT_NAME"
-    run_evaluation
-done
-
-# 2) Esperimenti su learning rate
-for LR in 5e-4 5e-5 1e-5; do
-    BATCH_SIZE=32
-    WD=0.0
-    EXPERIMENT_NAME=$(generate_experiment_name)
-    echo "Esperimento con learning rate = $LR"
-    python launch_scripts/finetune.py \
-        --data-location="$DATA_LOCATION" \
-        --save="$RESULTS_LOCATION" \
-        --batch-size="$BATCH_SIZE" \
-        --lr="$LR" \
-        --wd="$WD" \
-        --experiment-name="$EXPERIMENT_NAME"
-    run_evaluation
-done
-
-# 3) Esperimenti su weight decay
-for WD in 0.001 0.01 0.1; do
-    BATCH_SIZE=32
-    LR=1e-4
-    EXPERIMENT_NAME=$(generate_experiment_name)
-    echo "Esperimento con weight decay = $WD"
-    python launch_scripts/finetune.py \
-        --data-location="$DATA_LOCATION" \
-        --save="$RESULTS_LOCATION" \
-        --batch-size="$BATCH_SIZE" \
-        --lr="$LR" \
-        --wd="$WD" \
-        --experiment-name="$EXPERIMENT_NAME"
-    run_evaluation
-done
-
 # 4) Esperimenti sui 2 nuovi stopping criteria
 for STOPPING_CRITERION in fisher validation; do
     BATCH_SIZE=32
@@ -97,5 +49,3 @@ done
 
 # Disattiva l'ambiente virtuale
 deactivate
-
-
