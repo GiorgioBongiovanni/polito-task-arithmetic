@@ -2,6 +2,8 @@ import os
 import torch
 import torchvision.datasets as datasets
 import re
+from lib.balance import get_balanced_subset
+from torch.utils.data import DataLoader
 
 def pretify_classname(classname):
     l = re.findall(r'[A-Z](?:[a-z]+|[A-Z]*(?=[A-Z]|$))', classname)
@@ -14,17 +16,17 @@ def pretify_classname(classname):
 class EuroSATBase:
     def __init__(self,
                  preprocess,
-                 test_split,
+                 test_split: str,
                  location='~/datasets',
                  batch_size=32,
                  num_workers=16):
         # Data loading code
-        traindir = os.path.join(location, 'EuroSAT_splits', 'train')
-        testdir = os.path.join(location, 'EuroSAT_splits', test_split)
+        traindir = os.path.join(location, 'eurosat', 'EuroSAT_splits', 'train')
+        testdir = os.path.join(location, 'eurosat', 'EuroSAT_splits', test_split)
 
 
         self.train_dataset = datasets.ImageFolder(traindir, transform=preprocess)
-        self.train_loader = torch.utils.data.DataLoader(
+        self.train_loader = DataLoader(
             self.train_dataset,
             shuffle=True,
             batch_size=batch_size,
@@ -32,7 +34,7 @@ class EuroSATBase:
         )
 
         self.test_dataset = datasets.ImageFolder(testdir, transform=preprocess)
-        self.test_loader = torch.utils.data.DataLoader(
+        self.test_loader = DataLoader(
             self.test_dataset,
             batch_size=batch_size,
             num_workers=num_workers
@@ -55,6 +57,15 @@ class EuroSATBase:
         }
         for i in range(len(self.classnames)):
             self.classnames[i] = ours_to_open_ai[self.classnames[i]]
+
+        # Balance handling. The test dataset is already balanced.
+        self.balanced_train_dataset = get_balanced_subset(self.train_dataset)
+        self.balanced_train_loader = DataLoader(
+            self.balanced_train_dataset, 
+            batch_size=batch_size, 
+            num_workers=num_workers)
+        self.balanced_test_dataset = self.test_dataset
+        self.balanced_test_loader = self.test_loader
 
 
 class EuroSAT(EuroSATBase):

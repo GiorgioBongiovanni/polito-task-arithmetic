@@ -3,13 +3,14 @@ import os
 import pathlib
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-import numpy as np
 import PIL
 import torch
+from torch.utils.data import DataLoader
 from torchvision.datasets.folder import make_dataset
 from torchvision.datasets.utils import (download_and_extract_archive,
                                         verify_str_arg)
 from torchvision.datasets.vision import VisionDataset
+from lib.balance import get_balanced_subset
 
 def find_classes(directory: str) -> Tuple[List[str], Dict[str, int]]:
     """Finds the class folders in a dataset.
@@ -136,7 +137,7 @@ class GTSRB:
             transform=preprocess
         )
 
-        self.train_loader = torch.utils.data.DataLoader(
+        self.train_loader = DataLoader(
             self.train_dataset,
             batch_size=batch_size,
             shuffle=True,
@@ -150,7 +151,7 @@ class GTSRB:
             transform=preprocess
         )
 
-        self.test_loader = torch.utils.data.DataLoader(
+        self.test_loader = DataLoader(
             self.test_dataset,
             batch_size=batch_size,
             shuffle=False,
@@ -203,3 +204,15 @@ class GTSRB:
             'white circle with gray strike bar indicating no passing for cars has ended',
             'white circle with gray strike bar indicating no passing for trucks has ended',
         ]
+
+        # Balance handling. 
+        self.balanced_train_dataset = get_balanced_subset(self.train_dataset)
+        self.balanced_train_loader = DataLoader(
+            self.balanced_train_dataset, 
+            batch_size=batch_size, 
+            num_workers=num_workers)
+        self.balanced_test_dataset = get_balanced_subset(self.test_dataset)
+        self.balanced_test_loader = DataLoader(
+            self.balanced_test_dataset, 
+            batch_size=batch_size, 
+            num_workers=num_workers)

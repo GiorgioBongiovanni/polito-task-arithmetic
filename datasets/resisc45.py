@@ -8,9 +8,10 @@ from typing import Any, Callable, Dict, Optional, Tuple
 import numpy as np
 import torch
 from torch import Tensor
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
+from lib.balance import get_balanced_subset
 
 
 # modified from: https://github.com/microsoft/torchgeo
@@ -302,3 +303,9 @@ class RESISC45:
 
         # class names have _ so split on this for better zero-shot head
         self.classnames = [' '.join(c.split('_')) for c in RESISC45Dataset.classes]
+
+        # Balance handling
+        self.balanced_train_dataset = get_balanced_subset(self.train_dataset)
+        self.balanced_train_loader = DataLoader(self.balanced_train_dataset, batch_size=batch_size, num_workers=num_workers)
+        self.balanced_test_dataset = get_balanced_subset(self.test_dataset)
+        self.balanced_test_loader = DataLoader(self.balanced_test_dataset, batch_size=batch_size, num_workers=num_workers)
