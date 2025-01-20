@@ -1,8 +1,9 @@
 import os
 import torch
 import torchvision.datasets as datasets
-from lib.balance import get_balanced_subset
+from lib.balance import balanceable
 
+@balanceable()
 class DTD:
     def __init__(self,
                  preprocess,
@@ -32,9 +33,3 @@ class DTD:
                             for k, v in self.train_dataset.class_to_idx.items())
         self.classnames = [idx_to_class[i].replace(
             '_', ' ') for i in range(len(idx_to_class))]
-        
-        # balance handling. DTD il already balanced
-        self.balanced_train_dataset = self.train_dataset
-        self.balanced_train_loader = self.train_loader
-        self.balanced_test_dataset = self.test_dataset
-        self.balanced_test_loader = self.test_loader

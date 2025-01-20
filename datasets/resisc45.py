@@ -11,10 +11,11 @@ from torch import Tensor
 from torch.utils.data import Dataset, DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
-from lib.balance import get_balanced_subset
+from lib.balance import balanceable
 
 
 # modified from: https://github.com/microsoft/torchgeo
+@balanceable()
 class VisionDataset(Dataset[Dict[str, Any]], abc.ABC):
     """Abstract base class for datasets lacking geospatial information.
     This base class is designed for datasets with pre-defined image chips.
@@ -303,9 +304,3 @@ class RESISC45:
 
         # class names have _ so split on this for better zero-shot head
         self.classnames = [' '.join(c.split('_')) for c in RESISC45Dataset.classes]
-
-        # Balance handling
-        self.balanced_train_dataset = get_balanced_subset(self.train_dataset)
-        self.balanced_train_loader = DataLoader(self.balanced_train_dataset, batch_size=batch_size, num_workers=num_workers)
-        self.balanced_test_dataset = get_balanced_subset(self.test_dataset)
-        self.balanced_test_loader = DataLoader(self.balanced_test_dataset, batch_size=batch_size, num_workers=num_workers)

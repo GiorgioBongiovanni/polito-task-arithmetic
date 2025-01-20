@@ -2,7 +2,7 @@ import os
 import torch
 import torchvision.datasets as datasets
 import re
-from lib.balance import get_balanced_subset
+from lib.balance import balanceable
 from torch.utils.data import DataLoader
 
 def pretify_classname(classname):
@@ -13,6 +13,7 @@ def pretify_classname(classname):
         return out + ' area'
     return out
 
+@balanceable()
 class EuroSATBase:
     def __init__(self,
                  preprocess,
@@ -57,15 +58,6 @@ class EuroSATBase:
         }
         for i in range(len(self.classnames)):
             self.classnames[i] = ours_to_open_ai[self.classnames[i]]
-
-        # Balance handling. The test dataset is already balanced.
-        self.balanced_train_dataset = get_balanced_subset(self.train_dataset)
-        self.balanced_train_loader = DataLoader(
-            self.balanced_train_dataset, 
-            batch_size=batch_size, 
-            num_workers=num_workers)
-        self.balanced_test_dataset = self.test_dataset
-        self.balanced_test_loader = self.test_loader
 
 
 class EuroSAT(EuroSATBase):

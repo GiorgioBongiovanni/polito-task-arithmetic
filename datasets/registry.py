@@ -5,6 +5,7 @@ import torch
 import copy
 
 from torch.utils.data.dataset import random_split
+from lib.balance import balanceable
 
 from datasets.cars import Cars
 from datasets.cifar10 import CIFAR10
@@ -54,10 +55,8 @@ def split_train_into_train_val(dataset, new_dataset_class_name, batch_size, num_
     if new_dataset_class_name == 'MNISTVal':
         assert trainset.indices[0] == 36044
 
-
-    new_dataset = None
-
     new_dataset_class = type(new_dataset_class_name, (GenericDataset, ), {})
+    new_dataset_class = balanceable(batch_size, num_workers)(new_dataset_class)
     new_dataset = new_dataset_class()
 
     new_dataset.train_dataset = trainset
