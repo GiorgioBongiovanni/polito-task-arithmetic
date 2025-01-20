@@ -33,7 +33,8 @@ def get_balanced_subset(dataset: Dataset) -> Subset:
 def balanceable(batch_size=32, num_workers=16):
     def decorator(cls):
         """For a class which has attributes .train_dataset and .test_dataset 
-        adds properties .balanced_train_dataset and .balanced_test_dataset"""
+        adds properties .balanced_train_dataset and .balanced_test_dataset.
+        It adds the corresponding loader properties as well."""
 
         @property
         def balanced_train_dataset(self):
