@@ -50,7 +50,11 @@ def evaluate_model(encoder_path, dataset_name, args):
         num_workers=4
     )
 
-    train_loader = get_dataloader(train_dataset, is_train=True, args=args)
+    if args.balanced:
+        train_loader = get_dataloader(train_dataset, is_train=True, balanced=True, args=args)
+    else:
+        train_loader = get_dataloader(train_dataset, is_train=True, args=args)
+        
     test_loader = get_dataloader(test_dataset, is_train=False, args=args)
     val_loader = get_dataloader(val_dataset, is_train=False, args=args)
 

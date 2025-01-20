@@ -13,7 +13,7 @@ datasets = ["DTD", "EuroSAT", "GTSRB", "MNIST", "RESISC45", "SVHN"]
 
 def generate_experiment_name(args):
     """Genera un nome univoco per l'esperimento basato sui parametri di configurazione."""
-    return f"batch{args.batch_size}_lr{args.lr}_wd{args.wd}"
+    return f"batch{args.batch_size}_lr{args.lr}_wd{args.wd}_balanced{args.balanced}_stop{args.stopping_criterion}"
 
 
 def evaluate_alpha(base_encoder_path, task_vectors, datasets, args, alpha_values, single_task_metrics):
@@ -94,7 +94,12 @@ def evaluate_model(merged_encoder, dataset_name, args, single_task_metrics):
         batch_size=args.batch_size,
         num_workers=4
     )
-    train_loader = get_dataloader(train_dataset, is_train=True, args=args)
+
+    if args.balanced:
+        train_loader = get_dataloader(train_dataset, is_train=True, balanced=True, args=args)
+    else:
+        train_loader = get_dataloader(train_dataset, is_train=True, args=args)
+        
     test_loader = get_dataloader(test_dataset, is_train=False, args=args)
 
     # Compute absolute accuracies

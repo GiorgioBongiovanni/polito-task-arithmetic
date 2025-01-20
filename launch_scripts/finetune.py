@@ -43,7 +43,12 @@ def finetune_model(dataset_name, args):
         batch_size=args.batch_size,
         num_workers=4
     )
-    train_loader = get_dataloader(train_dataset, is_train=True, args=args)
+
+    if args.balanced:
+        train_loader = get_dataloader(train_dataset, is_train=True, balanced=True, args=args)
+    else:
+        train_loader = get_dataloader(train_dataset, is_train=True, args=args)
+
     test_loader = get_dataloader(test_dataset, is_train=False, args=args)
 
     # Calcolo dell'accuratezza del modello pre-addestrato
