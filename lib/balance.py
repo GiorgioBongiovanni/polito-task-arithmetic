@@ -1,6 +1,6 @@
 from collections import Counter
 from torch.utils.data import Dataset, Subset, DataLoader
-import numpy as np
+from pprint import pprint
 
 class DatasetBalanced(Exception):
     pass
@@ -12,23 +12,19 @@ def get_balanced_subset(dataset: Dataset) -> Subset:
     if hasattr(dataset, 'targets'):
         class_labels: list[int] = dataset.targets
     else: 
-        class_labels: list[int] = [dataset[i][1] for i in range(len(dataset))]
+        class_labels: list[int] = [label for _, label in dataset]
     class_counts = Counter(class_labels)
     if len(set(class_counts.values())) == 1:
         raise DatasetBalanced("Calling get_balanced_subset() on a balanced dataset")
-    min_count: int = min(class_counts.values())
-    np_class_labels = np.asarray(class_labels, dtype=np.int16)
-    subsamplig_mask = np.zeros_like(np_class_labels, dtype=bool)
-
-    for class_label in class_counts.keys():
-        class_indices = np.where(np_class_labels == class_label)[0]
-        selected_indices = np.random.choice(
-            class_indices, 
-            size=min_count, 
-            replace=False
-        )
-        subsamplig_mask[selected_indices] = True
-    return Subset(dataset, subsamplig_mask)
+    desired_count: int = min(class_counts.values()) # we want this number of entries for each class
+    current_count = {class_label: 0 for class_label in class_counts.keys()}
+    selected_indices: list[int] = []
+    for index, label in enumerate(class_labels):
+        if current_count[label] >= desired_count:
+            continue
+        selected_indices.append(index)
+        current_count[label] += 1
+    return Subset(dataset, selected_indices)
 
 def balanceable(batch_size=32, num_workers=16):
     def decorator(cls):
