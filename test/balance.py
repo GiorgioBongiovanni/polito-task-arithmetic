@@ -35,7 +35,7 @@ def main():
     encoder = ImageEncoder(args)
 
     for dataset_name in ["DTD", "EuroSAT", "GTSRB", "MNIST", "RESISC45", "SVHN"]:
-        verify_balancing('DTD', args, encoder)
+        verify_balancing(dataset_name, args, encoder)
 
 if __name__ == '__main__':
     main()
