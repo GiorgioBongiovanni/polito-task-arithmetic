@@ -1,11 +1,11 @@
-import argparse
+from argparse import ArgumentParser, Namespace
+from torch import cuda
+# TODO: add type inference on parser
+# from tap import Tap 
 import os
 
-import torch
-
-
-def parse_arguments():
-    parser = argparse.ArgumentParser()
+def parse_arguments() -> Namespace:
+    parser = ArgumentParser()
     parser.add_argument(
         "--data-location",
         type=str,
@@ -145,13 +145,12 @@ def parse_arguments():
     parser.add_argument(
     "--balanced",
     type=lambda x: x.lower() == 'true',
-    default=True,  # Imposta "true" come valore predefinito
+    default=True,
     help="Whether to use balanced training data by down-sampling over-represented classes. Default is True.",
     )
 
-
     parsed_args = parser.parse_args()
-    parsed_args.device = "cuda" if torch.cuda.is_available() else "cpu"
+    parsed_args.device = "cuda" if cuda.is_available() else "cpu"
 
     if parsed_args.load is not None and len(parsed_args.load) == 1:
         parsed_args.load = parsed_args.load[0]
