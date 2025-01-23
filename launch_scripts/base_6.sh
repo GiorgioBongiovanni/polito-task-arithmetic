@@ -21,18 +21,22 @@ run_evaluation() {
     python launch_scripts/eval_single_task.py \
         --data-location="$DATA_LOCATION" \
         --save="$RESULTS_LOCATION" \
-        --experiment-name="$EXPERIMENT_NAME"
+        --experiment-name="$EXPERIMENT_NAME" \
+        --batch-size="$BATCH_SIZE" \
+        --balanced="$BALANCED"
 
     python launch_scripts/eval_task_addition.py \
         --data-location="$DATA_LOCATION" \
         --save="$RESULTS_LOCATION" \
-        --experiment-name="$EXPERIMENT_NAME"
+        --experiment-name="$EXPERIMENT_NAME" \
+        --batch-size="$BATCH_SIZE" \
+        --balanced="$BALANCED"
 }
 
 # Esperimenti con bilanciamento (true e false)
 for BALANCED in true false; do
     # 1a) Esperimenti su batch size
-    for BATCH_SIZE in 8 16 32 64 128; do
+    for BATCH_SIZE in 32 8 16 64 128; do
         LR=1e-4
         WD=0.0
         STOPPING_CRITERION="epochs"

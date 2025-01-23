@@ -43,6 +43,13 @@ def finetune_model(dataset_name, args):
         batch_size=args.batch_size,
         num_workers=4
     )
+    val_dataset = get_dataset(
+        f"{dataset_name}Val",
+        preprocess=model.val_preprocess,
+        location=args.data_location,
+        batch_size=args.batch_size,
+        num_workers=4,
+    )
 
     if args.balanced:
         train_loader = get_dataloader(train_dataset, is_train=True, balanced=True, args=args)
@@ -50,6 +57,7 @@ def finetune_model(dataset_name, args):
         train_loader = get_dataloader(train_dataset, is_train=True, args=args)
 
     test_loader = get_dataloader(test_dataset, is_train=False, args=args)
+    val_loader = get_dataloader(val_dataset, is_train=False, args=args)
 
     # Calcolo dell'accuratezza del modello pre-addestrato
     device = torch.device(args.device)
@@ -70,6 +78,12 @@ def finetune_model(dataset_name, args):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.wd)
 
+    # Tracking best checkpoint
+    best_model_state = None
+    best_metric = -float("inf")  # To track the best metric
+    model_selection_criterion = args.stopping_criterion.lower()
+    print(f"criterionnnnnnnnnn = {model_selection_criterion}")
+
     # Training loop
     model.train()
     for epoch in range(data_config[dataset_name]["epochs"]):
@@ -87,6 +101,35 @@ def finetune_model(dataset_name, args):
                     f"Step [{batch_idx}/{len(train_loader)}], Loss: {loss.item():.4f}"
                 )
 
+        if model_selection_criterion == "validation":
+            print("Validationnnnn")
+            model.eval()
+            current_val_accuracy = compute_accuracy(val_loader, model, device)
+            print(f"Epoch {epoch + 1}: Validation Accuracy = {current_val_accuracy:.4f}")
+            if current_val_accuracy > best_metric:
+                best_metric = current_val_accuracy
+                best_model_state = model.state_dict()
+        elif model_selection_criterion == "fisher":
+            print("Fisherrrrrr")
+            model.eval()
+            current_fisher_log_trace = compute_fisher_log_trace(args, model, dataset_name, 2000)
+            print(f"Epoch {epoch + 1}: Fisher Log-Trace = {current_fisher_log_trace:.4f}")
+            if current_fisher_log_trace > best_metric:
+                best_metric = current_fisher_log_trace
+                best_model_state = model.state_dict()
+
+        model.train()
+
+    # If the stop criterion is "epochs", save the final checkpoint
+    if model_selection_criterion == "epochs":
+        best_model_state = model.state_dict()
+
+    # Restore the best model based on the chosen criterion
+    if best_model_state:
+        model.load_state_dict(best_model_state)
+        print(f"Restored the best model checkpoint based on {args.stopping_criterion}.")
+
+
     # Salvataggio del modello alla fine del training
     torch_save(model.image_encoder, f"{args.save}/{dataset_name}_encoder.pth")
     print(f"Fine del fine-tuning per il dataset {dataset_name}\n")
@@ -96,6 +139,7 @@ def finetune_model(dataset_name, args):
 
 def main():
     args = parse_arguments()
+    print(args)
     print(f"\nExperiment name = {args.experiment_name}\n")
 
     # Salva il modello pre-addestrato una volta prima di iniziare il fine-tuning
