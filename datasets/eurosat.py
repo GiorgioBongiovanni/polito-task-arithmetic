@@ -22,8 +22,8 @@ class EuroSATBase:
                  batch_size=32,
                  num_workers=16):
         # Data loading code
-        traindir = os.path.join(location, 'eurosat', 'EuroSAT_splits', 'train')
-        testdir = os.path.join(location, 'eurosat', 'EuroSAT_splits', test_split)
+        traindir = os.path.join(location, 'EuroSAT_splits', 'train')
+        testdir = os.path.join(location, 'EuroSAT_splits', test_split)
 
 
         self.train_dataset = datasets.ImageFolder(traindir, transform=preprocess)
