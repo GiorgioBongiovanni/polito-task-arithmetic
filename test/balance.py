@@ -3,7 +3,7 @@ from modeling import ImageEncoder
 from pprint import pprint
 from argparse import Namespace
 from datasets.registry import get_dataset
-from utils import get_dataloader
+from datasets.common import get_dataloader
 from torch.utils.data import DataLoader
 from collections import Counter
 from lib.split import SPLITS, split_name
