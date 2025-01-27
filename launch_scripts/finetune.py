@@ -2,7 +2,8 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from utils import torch_save, get_dataloader, compute_accuracy, compute_fisher_log_trace
+from datasets.common import get_dataloader
+from utils import torch_save, compute_accuracy, compute_fisher_log_trace
 from args import parse_arguments
 from datasets.registry import get_dataset
 from modeling import ImageClassifier, ImageEncoder
