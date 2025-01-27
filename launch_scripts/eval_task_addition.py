@@ -7,9 +7,10 @@ from args import parse_arguments
 from utils import get_dataloader, compute_accuracy, train_diag_fim_logtr
 from datasets.registry import get_dataset
 from heads import get_classification_head
+from lib.config import DATASET_CONFIG
 
-# Dataset specific configuration
-datasets = ["DTD", "EuroSAT", "GTSRB", "MNIST", "RESISC45", "SVHN"]
+# Names of relevant datasets
+datasets = [x for x in DATASET_CONFIG.keys()]
 
 def evaluate_alpha(base_encoder_path, task_vectors, datasets, args, alpha_values, single_task_metrics):
     best_alpha = 0.0

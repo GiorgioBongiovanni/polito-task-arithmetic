@@ -7,16 +7,10 @@ from args import parse_arguments
 from datasets.registry import get_dataset
 from modeling import ImageClassifier, ImageEncoder
 from heads import get_classification_head
+from lib.config import DATASET_CONFIG
 
-# Configurazione specifica per ogni dataset
-data_config = {
-    "DTD": {"epochs": 76},
-    "EuroSAT": {"epochs": 12},
-    "GTSRB": {"epochs": 11},
-    "MNIST": {"epochs": 5},
-    "RESISC45": {"epochs": 15},
-    "SVHN": {"epochs": 4},
-}
+# alias
+data_config = DATASET_CONFIG
 
 
 def finetune_model(dataset_name, args):

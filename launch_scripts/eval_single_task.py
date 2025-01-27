@@ -1,21 +1,14 @@
 import os
 import json
-import torch
 from utils import torch_load, get_dataloader, compute_accuracy, train_diag_fim_logtr
 from args import parse_arguments
 from datasets.registry import get_dataset
-from modeling import ImageClassifier, ImageEncoder
+from modeling import ImageClassifier
 from heads import get_classification_head
+from lib.config import DATASET_CONFIG
 
-# Configurazione specifica per ogni dataset
-data_config = {
-    "DTD": {},
-    "EuroSAT": {},
-    "GTSRB": {},
-    "MNIST": {},
-    "RESISC45": {},
-    "SVHN": {},
-}
+# name of relevant datasets
+dataset_names: list[str] = [x for x in DATASET_CONFIG.keys()]
 
 def evaluate_model(encoder_path, dataset_name, args):
     print(f"Inizio della valutazione per il dataset {dataset_name}")
@@ -84,9 +77,9 @@ def main():
     total_train_accuracy = 0.0
     total_test_accuracy = 0.0
     total_fisher_log_trace = 0.0
-    dataset_count = len(data_config)
+    dataset_count = len(dataset_names)
 
-    for dataset_name in data_config.keys():
+    for dataset_name in dataset_names:
         encoder_path = os.path.join(args.save, f"{dataset_name}_encoder.pth")
         if not os.path.exists(encoder_path):
             print(f"Encoder non trovato per il dataset {dataset_name}: {encoder_path}")
