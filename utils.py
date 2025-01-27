@@ -1,10 +1,7 @@
 import os
-import pickle
-
-import numpy as np
 import torch
 from tqdm.auto import tqdm
-from datasets.common import get_dataloader, maybe_dictionarize
+from datasets.common import maybe_dictionarize
 from datasets.registry import get_dataset
 
 
