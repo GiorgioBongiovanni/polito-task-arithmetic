@@ -2,6 +2,7 @@ venv/
 checkpoints/*
 data/*
 !data/**/README.md
+.tmp
 variables.sh
 
 task_arithmetic_datasets/
