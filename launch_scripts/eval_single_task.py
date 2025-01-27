@@ -79,6 +79,7 @@ def evaluate_model(encoder_path, dataset_name, args):
 
 def main():
     args = parse_arguments()
+    print(args)
     results = {}
     total_train_accuracy = 0.0
     total_test_accuracy = 0.0

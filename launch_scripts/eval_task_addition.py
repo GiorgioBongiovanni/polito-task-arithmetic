@@ -11,11 +11,6 @@ from heads import get_classification_head
 # Dataset specific configuration
 datasets = ["DTD", "EuroSAT", "GTSRB", "MNIST", "RESISC45", "SVHN"]
 
-def generate_experiment_name(args):
-    """Genera un nome univoco per l'esperimento basato sui parametri di configurazione."""
-    return f"batch{args.batch_size}_lr{args.lr}_wd{args.wd}_balanced{args.balanced}_stop{args.stopping_criterion}"
-
-
 def evaluate_alpha(base_encoder_path, task_vectors, datasets, args, alpha_values, single_task_metrics):
     best_alpha = 0.0
     best_avg_normalized_accuracy = 0.0
@@ -138,6 +133,7 @@ def evaluate_model(merged_encoder, dataset_name, args, single_task_metrics):
 
 def main():
     args = parse_arguments()
+    print(args)
     base_encoder_path = os.path.join(args.save, "zeroshot_encoder.pth")
 
     # Ensure the pre-trained model exists
