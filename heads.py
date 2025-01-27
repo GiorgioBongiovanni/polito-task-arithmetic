@@ -58,7 +58,7 @@ def get_classification_head(args, dataset):
     print(
         f"Did not find classification head for {args.model} on {dataset} at {filename}, building one from scratch."  # noqa: E501
     )
-    model = ImageEncoder(args, keep_lang=True).model
+    model = ImageEncoder(args.model, args.cache_dir, args.openclip_cachedir, keep_lang=True).model
     template = get_templates(dataset)
     classification_head = build_classification_head(
         model, dataset, template, args.data_location, args.device

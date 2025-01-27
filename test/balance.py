@@ -32,7 +32,7 @@ def verify_balancing(dataset_name: str, args: Namespace, encoder: ImageEncoder):
 def main():
     args: Namespace = parse_arguments()
     args.__dict__['data_location'] = './data'
-    encoder = ImageEncoder(args)
+    encoder = ImageEncoder(args.model, args.cache_dir, args.openclip_cachedir)
 
     for dataset_name in ["DTD", "EuroSAT", "GTSRB", "MNIST", "RESISC45", "SVHN"]:
         verify_balancing(dataset_name, args, encoder)
