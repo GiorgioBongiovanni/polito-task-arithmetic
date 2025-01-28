@@ -26,7 +26,7 @@ def get_balanced_subset(dataset: Dataset) -> Subset:
         current_count[label] += 1
     return Subset(dataset, selected_indices)
 
-def balanceable(batch_size=32, num_workers=16):
+def balanceable(batch_size=32, num_workers=16, shuffle=True):
     def decorator(cls):
         """For a class which has attributes .train_dataset and .test_dataset 
         adds properties .balanced_train_dataset and .balanced_test_dataset.
@@ -51,7 +51,7 @@ def balanceable(batch_size=32, num_workers=16):
                 self._balanced_train_loader = DataLoader(
                     self.balanced_train_dataset, 
                     batch_size, 
-                    num_workers=num_workers)
+                    num_workers=num_workers, shuffle=shuffle)
             return self._balanced_train_loader
         
         @property
@@ -73,7 +73,7 @@ def balanceable(batch_size=32, num_workers=16):
                 self._balanced_test_loader = DataLoader(
                     self.balanced_test_dataset, 
                     batch_size, 
-                    num_workers=num_workers)
+                    num_workers=num_workers, shuffle=shuffle)
             return self._balanced_test_loader
         
         cls.balanced_train_dataset = balanced_train_dataset
