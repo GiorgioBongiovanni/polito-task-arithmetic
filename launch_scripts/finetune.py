@@ -19,7 +19,7 @@ def finetune_model(dataset_name, args):
 
     # Preparazione del modello
     encoder = ImageEncoder(args.model, args.cache_dir, args.openclip_cachedir)
-    head = get_classification_head(args, f"{dataset_name}Val")
+    head = get_classification_head(args.save, args, f"{dataset_name}Val")
     model = ImageClassifier(encoder, head)
     model.freeze_head()
 

@@ -16,7 +16,7 @@ def evaluate_model(encoder_path, dataset_name, args):
 
     # Caricamento dell'encoder e della classification head
     encoder = torch_load(encoder_path, device=args.device)
-    head = get_classification_head(args, f"{dataset_name}Val")
+    head = get_classification_head(args.save, args, f"{dataset_name}Val")
     model = ImageClassifier(encoder, head)
     model.to(args.device)
     model.eval()
