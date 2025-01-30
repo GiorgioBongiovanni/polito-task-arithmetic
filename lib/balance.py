@@ -51,7 +51,8 @@ def balanceable(batch_size=32, num_workers=16):
                 self._balanced_train_loader = DataLoader(
                     self.balanced_train_dataset, 
                     batch_size, 
-                    num_workers=num_workers)
+                    num_workers=num_workers,
+                    shuffle=True)
             return self._balanced_train_loader
         
         @property
@@ -73,7 +74,8 @@ def balanceable(batch_size=32, num_workers=16):
                 self._balanced_test_loader = DataLoader(
                     self.balanced_test_dataset, 
                     batch_size, 
-                    num_workers=num_workers)
+                    num_workers=num_workers,
+                    shuffle=True)
             return self._balanced_test_loader
         
         cls.balanced_train_dataset = balanced_train_dataset

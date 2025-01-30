@@ -1,6 +1,7 @@
 import os
 import json
-from utils import torch_load, get_dataloader, compute_accuracy, train_diag_fim_logtr
+from datasets.common import get_dataloader
+from utils import torch_load, compute_accuracy, train_diag_fim_logtr
 from args import parse_arguments
 from datasets.registry import get_dataset
 from modeling import ImageClassifier

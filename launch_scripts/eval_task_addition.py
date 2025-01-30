@@ -1,10 +1,11 @@
 import os
 import torch
 import json
+from datasets.common import get_dataloader
 from task_vectors import NonLinearTaskVector
 from modeling import ImageClassifier
 from args import parse_arguments
-from utils import get_dataloader, compute_accuracy, train_diag_fim_logtr
+from utils import compute_accuracy, train_diag_fim_logtr
 from datasets.registry import get_dataset
 from heads import get_classification_head
 from lib.config import DATASET_CONFIG

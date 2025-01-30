@@ -6,6 +6,7 @@ data/*
 variables.sh
 
 task_arithmetic_datasets/
+task_arithmetic_datasets_2/*
 __pycache__/
 
 # Ignore all .pt files

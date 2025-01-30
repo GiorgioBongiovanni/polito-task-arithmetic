@@ -60,6 +60,7 @@ class EuroSATBase:
             self.classnames[i] = ours_to_open_ai[self.classnames[i]]
 
 
+@balanceable()
 class EuroSAT(EuroSATBase):
     def __init__(self,
                  preprocess,
@@ -69,6 +70,7 @@ class EuroSAT(EuroSATBase):
         super().__init__(preprocess, 'test', location, batch_size, num_workers)
 
 
+@balanceable()
 class EuroSATVal(EuroSATBase):
     def __init__(self,
                  preprocess,
