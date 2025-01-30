@@ -18,8 +18,8 @@ def finetune_model(dataset_name, args):
     print(f"Inizio del fine-tuning per il dataset {dataset_name}")
 
     # Preparazione del modello
-    encoder = ImageEncoder(args)
-    head = get_classification_head(args, f"{dataset_name}Val")
+    encoder = ImageEncoder(args.model, args.cache_dir, args.openclip_cachedir)
+    head = get_classification_head(args.save, args, f"{dataset_name}Val")
     model = ImageClassifier(encoder, head)
     model.freeze_head()
 
@@ -138,7 +138,7 @@ def main():
     print(f"\nExperiment name = {args.experiment_name}\n")
 
     # Salva il modello pre-addestrato una volta prima di iniziare il fine-tuning
-    encoder = ImageEncoder(args)
+    encoder = ImageEncoder(args.model, args.cache_dir, args.openclip_cachedir)
     pretrain_path = os.path.join(args.save, "zeroshot_encoder.pth")
     if not os.path.exists(pretrain_path):
         torch_save(encoder, pretrain_path)

@@ -5,27 +5,30 @@ import utils
 
 
 class ImageEncoder(torch.nn.Module):
-    def __init__(self, args, keep_lang=False):
+    def __init__(self, model: str, cache_dir: str, openclip_cachedir: str, keep_lang=False):
+        """cache_dir: Directory for caching features and encoder
+        openclip_cachedir: Directory for caching models from OpenCLIP
+        model: The type of model (e.g. RN50, ViT-B-32)."""
         super().__init__()
 
-        print(f"Loading {args.model} pre-trained weights.")
-        if "__pretrained__" in args.model:
-            name, pretrained = args.model.split("__pretrained__")
-        elif "__init__" in args.model:
+        print(f"Loading {model} pre-trained weights.")
+        if "__pretrained__" in model:
+            name, pretrained = model.split("__pretrained__")
+        elif "__init__" in model:
             print("Using random initialization.")
-            name, pretrained = args.model.split("__init__")[0], None
+            name, pretrained = model.split("__init__")[0], None
         else:
-            name = args.model
+            name = model
             pretrained = "openai"
         (
             self.model,
             self.train_preprocess,
             self.val_preprocess,
         ) = open_clip.create_model_and_transforms(
-            name, pretrained=pretrained, cache_dir=args.openclip_cachedir
+            name, pretrained=pretrained, cache_dir=openclip_cachedir
         )
 
-        self.cache_dir = args.cache_dir
+        self.cache_dir = cache_dir
 
         if not keep_lang and hasattr(self.model, "transformer"):
             delattr(self.model, "transformer")

@@ -6,6 +6,7 @@ from task_vectors import NonLinearTaskVector
 from modeling import ImageClassifier
 from args import parse_arguments
 from utils import compute_accuracy, train_diag_fim_logtr
+from datasets.common import get_dataloader
 from datasets.registry import get_dataset
 from heads import get_classification_head
 from lib.config import DATASET_CONFIG
@@ -27,7 +28,7 @@ def evaluate_alpha(base_encoder_path, task_vectors, datasets, args, alpha_values
 
         for dataset_name, task_vector in zip(datasets, task_vectors):
             # Load multi-task model
-            head = get_classification_head(args, f"{dataset_name}Val")
+            head = get_classification_head(args.save, args, f"{dataset_name}Val")
             model = ImageClassifier(merged_encoder, head)
             model.eval()
             model.to(args.device)
@@ -71,7 +72,7 @@ def evaluate_model(merged_encoder, dataset_name, args, single_task_metrics):
     print(f"Evaluating dataset {dataset_name}...")
 
     # Load classification head
-    head = get_classification_head(args, f"{dataset_name}Val")
+    head = get_classification_head(args.save, args, f"{dataset_name}Val")
     model = ImageClassifier(merged_encoder, head)
     model.eval()
     model.to(args.device)
